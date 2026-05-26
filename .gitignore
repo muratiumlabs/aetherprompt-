@@ -1,7 +1,7 @@
 # AetherPrompt - Git Ignore Kuralları
 # ======================================
-# config.js asla GitHub'a gönderilmez — API key'leri içerir
-config.js
+# config.js asla GitHub'a gönderilmez — API key'leri içerir (Gizli repo için aktif edildi)
+# config.js
 
 # Python cache
 __pycache__/
