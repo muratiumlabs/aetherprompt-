@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherPrompt | AI Art Prompt Optimizer & Mood Analyzer</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Ionicons for modern minimal icons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Floating Background Particles -->
+    <div class="background-glow"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <ion-icon name="sparkles-outline"></ion-icon>
+                </div>
+                <div class="logo-text">
+                    <h1>AetherPrompt</h1>
+                    <p>Yapay Zeka Sanat Promptu Optimize Edici & Duygu Analizci</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button class="btn btn-secondary btn-icon-only" id="btn-toggle-settings" title="API Ayarları">
+                    <ion-icon name="key-outline"></ion-icon>
+                </button>
+            </div>
+        </header>
+
+        <!-- API SETTINGS MODAL/COLLAPSIBLE PANEL -->
+        <div class="settings-panel" id="settings-panel">
+            <div class="settings-header">
+                <h3><ion-icon name="options-outline"></ion-icon> API Anahtarı Yapılandırması</h3>
+                <button class="btn-close" id="btn-close-settings">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+            </div>
+            <div class="settings-body">
+                <div class="settings-key-notice">
+                    <ion-icon name="shield-checkmark-outline"></ion-icon>
+                    <p>API anahtarlarınız <strong>yalnızca tarayıcınızın yerel hafızasında (localStorage)</strong> saklanır. Kaynak kodda veya sunucuda <strong>kesinlikle bulunmaz</strong>.</p>
+                </div>
+
+                <div class="settings-key-guide">
+                    <p>🔑 Ücretsiz API anahtarı almak için:</p>
+                    <ul>
+                        <li><strong>GROQ:</strong> <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> → Ücretsiz, çok hızlı</li>
+                        <li><strong>Gemini:</strong> <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey</a> → Ücretsiz tier</li>
+                    </ul>
+                </div>
+                
+                <div class="form-group">
+                    <label for="input-groq-key">GROQ API Key</label>
+                    <div class="input-password-wrapper">
+                        <input type="password" id="input-groq-key" placeholder="gsk_...">
+                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('input-groq-key')">
+                            <ion-icon name="eye-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="input-gemini-key">Gemini API Key</label>
+                    <div class="input-password-wrapper">
+                        <input type="password" id="input-gemini-key" placeholder="AIzaSy...">
+                        <button class="btn-toggle-visibility" onclick="togglePasswordVisibility('input-gemini-key')">
+                            <ion-icon name="eye-outline"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="btn-save-settings">
+                    <ion-icon name="checkmark-done-outline"></ion-icon> Değişiklikleri Kaydet
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN LAYOUT Grid -->
+        <main class="main-content">
+            
+            <!-- LEFT PANEL: INPUT & PRESETS -->
+            <section class="panel-input glass-card">
+                <h2 class="section-title"><ion-icon name="create-outline"></ion-icon> Fikrinizi Zenginleştirin</h2>
+                
+                <!-- Simple Prompt Input with AI Assistant -->
+                <div class="form-group">
+                    <div class="label-with-action">
+                        <label for="turkish-prompt">Sanat Fikriniz</label>
+                        <button type="button" class="btn-micro-ai" id="btn-generate-idea" title="Gemini ile Çizim Fikri Üret">
+                            <span class="btn-micro-text"><ion-icon name="sparkles-outline"></ion-icon> Fikir Üret (Gemini)</span>
+                            <div class="micro-spinner hidden" id="spinner-micro-idea"></div>
+                        </button>
+                    </div>
+                    <textarea id="turkish-prompt" placeholder="Örn: Karanlıkta parlayan bir robot çiz, etrafında neon kelebekler uçuşsun, siberpunk şehir temalı..." rows="3"></textarea>
+                    
+                    <!-- Presets chips -->
+                    <div class="preset-suggestions">
+                        <span class="preset-label">İlham Al:</span>
+                        <button class="preset-chip" data-text="Bulutların üzerinde süzülen antik bir tapınak, altın gün batımı ışığı">Antik Tapınak</button>
+                        <button class="preset-chip" data-text="Derin okyanusta parıldayan biyolüminesans deniz canlıları ve batık bir denizaltı">Kayıp Okyanus</button>
+                        <button class="preset-chip" data-text="Karlar altında terk edilmiş fütüristik tren istasyonu, buharlı mekanik tren">Kar İstasyonu</button>
+                    </div>
+                </div>
+
+                <!-- Parameters section -->
+                <div class="control-row">
+                    <!-- Target Model Selection -->
+                    <div class="form-group flex-1">
+                        <label for="model-selector"><ion-icon name="hardware-chip-outline"></ion-icon> Yapay Zeka Modeli</label>
+                        <div class="custom-select-wrapper">
+                            <select id="model-selector">
+                                <option value="groq" selected>1. GROQ (Llama 3.3 70B - Ultra Hızlı)</option>
+                                <option value="gemini-lite">2. Gemini 3.1 Flash-Lite (Akıcı & Tasarruflu)</option>
+                                <option value="gemini-flash">3. Gemini 2.5 Flash (Dengeli & Sanatsal)</option>
+                                <option value="gemini-3.5-flash">4. Gemini 3.5 Flash (Yeni Nesil & Üstün Zeka)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Target AI Art Generator -->
+                    <div class="form-group flex-1">
+                        <label for="art-generator-selector"><ion-icon name="image-outline"></ion-icon> Hedef Çizim Aracı</label>
+                        <div class="custom-select-wrapper">
+                            <select id="art-generator-selector">
+                                <optgroup label="Görsel Üreticiler (Görüntü)">
+                                    <option value="midjourney" selected>Midjourney v6</option>
+                                    <option value="chatgpt">ChatGPT Plus (DALL-E 3)</option>
+                                    <option value="dalle3">DALL-E 3 (API)</option>
+                                    <option value="sd3">Stable Diffusion 3</option>
+                                    <option value="firefly">Adobe Firefly v3</option>
+                                    <option value="nanobanana">Nano Banana</option>
+                                </optgroup>
+                                <optgroup label="Video Üreticiler (Hareketli)">
+                                    <option value="veo">Google Veo 3</option>
+                                    <option value="sora">OpenAI Sora</option>
+                                    <option value="runway">Runway Gen-3</option>
+                                    <option value="luma">Luma Dream Machine</option>
+                                    <option value="pika">Pika 2.0</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Target Language Selection -->
+                    <div class="form-group flex-1">
+                        <label for="language-selector"><ion-icon name="language-outline"></ion-icon> Hedef Dil</label>
+                        <div class="custom-select-wrapper">
+                            <select id="language-selector">
+                                <option value="en" selected>İngilizce (English)</option>
+                                <option value="tr">Türkçe (Turkish)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Style presets cards grid -->
+                <div class="form-group">
+                    <label>Sanatsal Tarz Presetleri</label>
+                    <div class="style-grid">
+                        <div class="style-card active" data-style="Cyberpunk / Sci-Fi" data-keywords="cyberpunk, futuristic neon lighting, high-tech, octane render, complex circuitry, dark synthwave vibe">
+                            <div class="style-icon cyberpunk"><ion-icon name="planet-outline"></ion-icon></div>
+                            <span class="style-name">Cyberpunk</span>
+                        </div>
+                        <div class="style-card" data-style="Cinematic Fantasy" data-keywords="epic cinematic fantasy, hyper-realistic, dramatic dark fantasy lighting, unreal engine 5 render, highly detailed, mythical atmosphere">
+                            <div class="style-icon fantasy"><ion-icon name="sparkles-outline"></ion-icon></div>
+                            <span class="style-name">Fantastik</span>
+                        </div>
+                        <div class="style-card" data-style="Surrealism / Dreamlike" data-keywords="surrealist oil painting, dreamscape, whimsical details, salvador dali style, ethereal color palette, floating elements, mysterious vibe">
+                            <div class="style-icon surreal"><ion-icon name="eye-outline"></ion-icon></div>
+                            <span class="style-name">Sürrealizm</span>
+                        </div>
+                        <div class="style-card" data-style="Anime / Manga Illustration" data-keywords="gorgeous anime background art, makoto shinkai style, vibrant colors, beautiful sky gradient, clean line art, high detail, studio ghibli aesthetic">
+                            <div class="style-icon anime"><ion-icon name="rose-outline"></ion-icon></div>
+                            <span class="style-name">Anime</span>
+                        </div>
+                        <div class="style-card" data-style="Classic Oil Painting" data-keywords="impasto oil painting, thick brush strokes, van gogh dynamic texture, dramatic chiaroscuro lighting, classical masterpiece, museum quality texture">
+                            <div class="style-icon painting"><ion-icon name="brush-outline"></ion-icon></div>
+                            <span class="style-name">Yağlı Boya</span>
+                        </div>
+                        <div class="style-card" data-style="Dark Gothic / Horror" data-keywords="dark gothic atmosphere, lovecraftian horror elements, heavy fog, high contrast chiaroscuro, intricate shadows, unsettling beautiful mood, bekşinski inspired">
+                            <div class="style-icon gothic"><ion-icon name="moon-outline"></ion-icon></div>
+                            <span class="style-name">Karanlık Gotik</span>
+                        </div>
+                        <div class="style-card" data-style="Photorealistic / Realism" data-keywords="photorealistic, 8k resolution, highly detailed, hyper-realistic, dramatic cinematic lighting, professional photographic composition, sharp focus, natural textures">
+                            <div class="style-icon realistic"><ion-icon name="camera-outline"></ion-icon></div>
+                            <span class="style-name">Gerçekçi</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail / Lighting Options sliders & selects -->
+                <div class="control-row">
+                    <div class="form-group flex-1">
+                        <label for="lighting-select">Atmosferik Işık</label>
+                        <select id="lighting-select">
+                            <option value="volumetric">Volumetrik Tanrı Işıkları (Hacimsel)</option>
+                            <option value="neon">Pulsing Neon & Siberpunk Aydınlatma</option>
+                            <option value="golden">Golden Hour (Yumuşak Altın Saat Işığı)</option>
+                            <option value="chiaroscuro" selected>Chiaroscuro (Derin Kontrast & Gölge Oyunu)</option>
+                            <option value="bioluminescent">Biyolüminesans Yumuşak Parıltı</option>
+                            <option value="studio">Profesyonel Stüdyo Portre Işığı</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group flex-1">
+                        <label for="aspect-ratio-select">Boyut Oranı (Aspect Ratio)</label>
+                        <select id="aspect-ratio-select">
+                            <option value="16:9" selected>16:9 (Geniş Ekran / Manzara)</option>
+                            <option value="1:1">1:1 (Kare / Sosyal Medya)</option>
+                            <option value="9:16">9:16 (Dikey / Telefon)</option>
+                            <option value="4:3">4:3 (Klasik Fotoğraf)</option>
+                            <option value="21:9">21:9 (Sinematik Ultra Geniş)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- CHARACTER CONSISTENCY PANEL -->
+                <div class="consistency-card form-group">
+                    <div class="consistency-header" id="consistency-header">
+                        <div class="header-left">
+                            <span class="icon"><ion-icon name="person-outline"></ion-icon></span>
+                            <h4>Karakter Tutarlılık Motoru</h4>
+                        </div>
+                        <div class="toggle-wrapper">
+                            <input type="checkbox" id="char-consistency-toggle" class="toggle-checkbox">
+                            <label for="char-consistency-toggle" class="toggle-label"></label>
+                        </div>
+                    </div>
+                    
+                    <div class="consistency-body collapsed" id="consistency-body">
+                        <!-- Dynamic Characters Container -->
+                        <div id="character-list-container">
+                            <!-- Character cards will be dynamically injected here by app.js -->
+                        </div>
+                        
+                        <!-- Add Character Button -->
+                        <button type="button" class="btn btn-secondary btn-full mt-3" id="btn-add-character">
+                            <ion-icon name="person-add-outline"></ion-icon> Yeni Karakter Ekle
+                        </button>
+                        
+                        <div class="form-group mt-4">
+                            <div class="slider-info">
+                                <label for="char-weight-slider">Karakter Benzerlik Derecesi (Ağırlık)</label>
+                                <span class="slider-val" id="char-weight-val">100%</span>
+                            </div>
+                            <input type="range" id="char-weight-slider" min="0" max="100" value="100" class="custom-slider">
+                            <p class="slider-desc">100% tüm detayları kopyalar. 0% sadece yüz hatlarını korur, saç/kıyafeti serbest bırakır.</p>
+                        </div>
+                        
+                        <div class="form-group mt-3 checkbox-group">
+                            <input type="checkbox" id="char-sheet-toggle">
+                            <label for="char-sheet-toggle"><ion-icon name="grid-outline"></ion-icon> Karakter Tasarım Sayfası Olarak Üret (Model Sheet / Çoklu Açı)</label>
+                        </div>
+                        
+                        <div class="form-group mt-2 collapsed-sheet hidden-style" id="char-sheet-style-group">
+                            <label for="char-sheet-style-select">Model Sheet Tasarım Tarzı</label>
+                            <div class="custom-select-wrapper">
+                                <select id="char-sheet-style-select">
+                                    <option value="standard" selected>Eskiz Model Paftası (Tüm Açılar & İfadeler)</option>
+                                    <option value="pixar">3D Pixar / Disney Animasyon Tarzı (CGI Model Sheet)</option>
+                                    <option value="anime">Anime / Manga Konsept Model Paftası (Studio Ghibli / Shinkai)</option>
+                                    <option value="game3d">3D Dijital Oyun Karakter Paftası (Unreal Engine T-Pose)</option>
+                                    <option value="chibi">Chibi / Sevimli Minyatür Figür Sayfası (Cute Chibi Design)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button class="btn btn-primary btn-large btn-full glow-pulse" id="btn-optimize">
+                    <span class="btn-text">
+                        <ion-icon name="rocket-outline"></ion-icon> Promptu Optimize Et & Analiz Yap
+                    </span>
+                    <div class="spinner hidden" id="btn-spinner"></div>
+                </button>
+            </section>
+
+            <!-- RIGHT PANEL: DASHBOARD RESULTS -->
+            <section class="panel-results">
+                
+                <!-- OUTPUT PROMPT CARD -->
+                <div class="glass-card output-card">
+                    <div class="output-card-header">
+                        <h2 class="card-title" id="output-title"><ion-icon name="sparkles"></ion-icon> Optimize Edilmiş Prompt</h2>
+                        <span class="badge" id="art-badge">Midjourney v6</span>
+                    </div>
+                    
+                    <div class="prompt-output-container">
+                        <div class="prompt-output-text" id="optimized-prompt-text">
+                            Sol taraftan fikrinizi yazıp <span class="highlight">"Optimize Et"</span> butonuna bastığınızda, seçtiğiniz yapay zeka modeli İngilizce sanatsal zenginleştirilmiş promptunuzu buraya getirecek...
+                        </div>
+                        <button class="btn btn-secondary btn-icon" id="btn-copy-prompt" disabled>
+                            <ion-icon name="copy-outline" id="copy-icon"></ion-icon> Kopyala
+                        </button>
+                    </div>
+
+                    <!-- Prompt Enhancers / Magic Words -->
+                    <div class="prompt-enhancers hidden" id="enhancers-area">
+                        <span class="enhancer-label">Hızlı Kelime Ekle:</span>
+                        <div class="enhancer-chips" id="enhancer-chips-container">
+                            <!-- Chips will be generated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MOOD ANALYZER GRAPHIC DASHBOARD -->
+                <div class="glass-card mood-card">
+                    <h2 class="card-title"><ion-icon name="analytics-outline"></ion-icon> Atmosfer & Duygu Analizi</h2>
+                    
+                    <div class="mood-grid">
+                        <!-- Primary Vibe Radial Meter -->
+                        <div class="mood-item vibe-main">
+                            <span class="mood-label">Baskın Atmosfer</span>
+                            <div class="vibe-display">
+                                <span class="vibe-icon-large" id="main-vibe-icon"><ion-icon name="color-palette-outline"></ion-icon></span>
+                                <span class="vibe-name-large" id="main-vibe-name">Belirsiz</span>
+                            </div>
+                        </div>
+
+                        <!-- Progress meters list -->
+                        <div class="mood-item vibe-bars">
+                            <!-- Vibe 1 -->
+                            <div class="bar-group">
+                                <div class="bar-info">
+                                    <span class="bar-title">Gizem & Eterik</span>
+                                    <span class="bar-value" id="val-mysterious">0%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-bar progress-indigo" id="bar-mysterious" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Vibe 2 -->
+                            <div class="bar-group">
+                                <div class="bar-info">
+                                    <span class="bar-title">Dinamik & Canlı</span>
+                                    <span class="bar-value" id="val-dynamic">0%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-bar progress-fuchsia" id="bar-dynamic" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Vibe 3 -->
+                            <div class="bar-group">
+                                <div class="bar-info">
+                                    <span class="bar-title">Melankoli & Karanlık</span>
+                                    <span class="bar-value" id="val-dark">0%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-bar progress-blue" id="bar-dark" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Detail level -->
+                            <div class="bar-group">
+                                <div class="bar-info">
+                                    <span class="bar-title">Görsel Karmaşıklık (Detay)</span>
+                                    <span class="bar-value" id="val-complexity">0%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-bar progress-violet" id="bar-complexity" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLOR PALETTE GENERATOR -->
+                <div class="glass-card palette-card">
+                    <h2 class="card-title"><ion-icon name="color-filter-outline"></ion-icon> Önerilen Renk Paleti</h2>
+                    <p class="palette-desc">Promptun atmosferine en uygun sanatsal renk uyumu. HEX koduna tıklayarak kopyalayabilirsiniz.</p>
+                    
+                    <div class="palette-container" id="palette-container">
+                        <!-- Color bubbles -->
+                        <div class="palette-color-block" style="background-color: #1a1a2e">
+                            <span class="color-hex">#1A1A2E</span>
+                        </div>
+                        <div class="palette-color-block" style="background-color: #16213e">
+                            <span class="color-hex">#16213E</span>
+                        </div>
+                        <div class="palette-color-block" style="background-color: #0f3460">
+                            <span class="color-hex">#0F3460</span>
+                        </div>
+                        <div class="palette-color-block" style="background-color: #e94560">
+                            <span class="color-hex">#E94560</span>
+                        </div>
+                        <div class="palette-color-block" style="background-color: #ffffff">
+                            <span class="color-hex">#FFFFFF</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROMPT HISTORY & FAVORITES CARD -->
+                <div class="glass-card history-card">
+                    <div class="history-card-header">
+                        <h2 class="card-title"><ion-icon name="time-outline"></ion-icon> Prompt Geçmişi & Favoriler</h2>
+                        <button class="btn btn-secondary btn-xs" id="btn-clear-history" title="Tüm Geçmişi Temizle">
+                            <ion-icon name="trash-outline"></ion-icon> Temizle
+                        </button>
+                    </div>
+                    <p class="history-desc">Son ürettiğiniz promptlar yerel tarayıcı hafızasında saklanır. Favorilere ekleyebilir veya tek tıkla geri getirebilirsiniz.</p>
+                    
+                    <div class="history-list" id="history-list">
+                        <!-- History items will be dynamically rendered here -->
+                        <div class="history-empty" id="history-empty">
+                            <ion-icon name="folder-open-outline"></ion-icon>
+                            <p>Henüz optimize edilmiş prompt geçmişiniz yok.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <!-- FOOTER -->
+        <footer class="app-footer">
+            <p>&copy; 2026 AetherPrompt. Tüm Hakları Saklıdır. | Gücünü GROQ Llama 3 & Gemini modellerinden alır.</p>
+        </footer>
+    </div>
+
+    <!-- Notification system -->
+    <div class="toast" id="toast">
+        <ion-icon name="checkmark-circle-outline"></ion-icon>
+        <span id="toast-message">Kopyalandı!</span>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# AetherPrompt - Git Ignore Kuralları
+# ======================================
+# config.js asla GitHub'a gönderilmez — API key'leri içerir
+config.js
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# OS dosyaları
+.DS_Store
+Thumbs.db
